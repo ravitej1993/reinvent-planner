@@ -73,7 +73,8 @@ def seed(server, *entries):
 
 async def open_form(app, pilot, button="#personal-add"):
     app.query_one(button, Button).press()
-    await pilot.pause()
+    for _ in range(3):  # pushed, then composed, then its fields filled (slow on CI)
+        await pilot.pause()
     assert isinstance(app.screen, PersonalTimeForm)
     return app.screen
 
@@ -88,14 +89,17 @@ def fill(form, **values):
 
 async def save(app, pilot):
     app.screen.query_one("#pt-save", Button).press()
-    await pilot.pause()
+    for _ in range(3):  # the form closes, then the confirmation opens and is composed
+        await pilot.pause()
 
 
 async def answer(app, pilot, yes: bool):
     assert isinstance(app.screen, ConfirmScreen)
+    await pilot.pause()  # composed (its buttons exist) before pressing one
     app.screen.query_one("#yes" if yes else "#no", Button).press()
-    await app.workers.wait_for_complete()
-    await pilot.pause()
+    for _ in range(3):  # the press, then the worker it starts, then that worker's callback
+        await pilot.pause()
+        await app.workers.wait_for_complete()
     # Shown only when a test fails: what the app told the user (e.g. an error after the write).
     print("app messages:", [str(n.message) for n in app._notifications])
 

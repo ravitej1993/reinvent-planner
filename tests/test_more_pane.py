@@ -184,7 +184,11 @@ async def press(app, pilot, selector: str) -> None:
 
 
 async def settle(app, pilot) -> None:
-    await app.workers.wait_for_complete()
+    # Several rounds: a worker's callback can start another worker (a sign-out reloads the
+    # account, which reads it in a worker), and slow CI runners need every round.
+    for _ in range(4):
+        await pilot.pause()
+        await app.workers.wait_for_complete()
     await pilot.pause()
 
 

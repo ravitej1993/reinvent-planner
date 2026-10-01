@@ -54,7 +54,7 @@ reinvent-planner = "reinvent_planner.cli:app"
 rip = "reinvent_planner.cli:app"
 
 [dependency-groups]
-dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.8"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "pytest-timeout>=2.3", "ruff>=0.8"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/reinvent_planner"]
@@ -81,3 +81,5 @@ addopts = "-q -m 'not live'"
 markers = ["live: calls the real AWS Events API (opt-in: pytest -m live)"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# A hung test fails (and is named) instead of stalling CI.
+timeout = 120

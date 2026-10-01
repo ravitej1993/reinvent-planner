@@ -1,5 +1,6 @@
 """The Launch tab, driven headless against a fake API and a fake clock."""
 
+import asyncio
 from datetime import UTC, datetime
 
 import httpx
@@ -72,7 +73,14 @@ async def open_launch(app, pilot, *, mode="api", seconds_before=100):
     pane.query_one("#mode", Select).value = mode
     await pilot.pause()
     pane.query_one("#arm", Button).press()
-    await app.workers.wait_for_complete()
+    # The press is handled on a later tick, and it starts the preflight worker: wait for it
+    # to finish, not just for the workers that happened to exist a moment ago.
+    for _ in range(200):
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+        if mode != "api" or "Checking" not in str(pane.query_one("#preflight").render()):
+            break
+        await asyncio.sleep(0.05)
     await pilot.pause()
     if mode == "api":
         why = str(pane.query_one("#preflight").render())
