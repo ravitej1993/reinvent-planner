@@ -64,6 +64,8 @@ jobs:
       - run: uv run --resolution lowest-direct pytest
 
   codeql:
+    # Code scanning needs a public repo (or GitHub Advanced Security) to upload results.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

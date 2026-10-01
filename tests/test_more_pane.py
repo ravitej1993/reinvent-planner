@@ -703,6 +703,7 @@ async def test_a_real_delivery_saves_the_exact_bytes(seeded, downloads):
 
 def test_delivery_text_lets_windows_text_mode_add_the_carriage_returns(monkeypatch):
     crlf = "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n"
+    monkeypatch.setattr(more_pane.sys, "platform", "darwin")
     assert more_pane.delivery_text(crlf, web=False) == crlf  # macOS/Linux: written as is
     monkeypatch.setattr(more_pane.sys, "platform", "win32")
     # Windows terminal: text mode turns each "\n" back into "\r\n" (never "\r\r\n").
@@ -716,15 +717,18 @@ def test_delivery_text_lets_windows_text_mode_add_the_carriage_returns(monkeypat
 async def test_the_sign_in_is_never_read_on_the_ui_thread(signed_in, monkeypatch):
     threads = []
     real = services.signed_in_as
+    gate = threading.Event()  # holds the first read, so "Checking…" is seen on any machine
 
     def spy():
         threads.append(threading.current_thread() is threading.main_thread())
+        gate.wait(5)
         return real()
 
     monkeypatch.setattr(services, "signed_in_as", spy)
     app = MoreApp()
     async with app.run_test(size=(160, 60)) as pilot:
         assert "Checking" in text_of(app, "#account-status")
+        gate.set()
         await settle(app, pilot)
         app.query_one(MorePane).reload()
         await settle(app, pilot)

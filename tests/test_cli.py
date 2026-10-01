@@ -45,7 +45,7 @@ def test_rank_checklist_and_markdown(tmp_path):
     result = rip("checklist", "--offline", "--out", str(out))
     assert result.exit_code == 0, result.output
     assert "RESERVE" in result.output
-    text = out.read_text()
+    text = out.read_text(encoding="utf-8")
     assert "**#1 AIM301**" in text
     assert "backup CMP201" in text
     assert "clashes with AIM301" in text  # AIM302 overlaps the #1 pick
@@ -857,12 +857,15 @@ def test_markup_looking_api_text_never_crashes_output(monkeypatch):
 @pytest.mark.parametrize("bad", ["../../x", "a/b", "..", ".hidden", "a b", "x" * 129, ""])
 def test_an_unsafe_event_id_is_refused_before_anything_runs(bad):
     """The review's P1-L5: `--event ../../x` wrote travel corrections outside the config dir."""
+    from rich.text import Text
     from typer.testing import CliRunner
 
     from reinvent_planner import cli
 
     result = CliRunner().invoke(cli.app, ["--event", bad, "venues", "reset", "--yes"])
-    assert result.exit_code != 0 and "--event" in result.output
+    # Plain text: on CI, Rich colours the error and escape codes split "--event".
+    plain = "".join(Text.from_ansi(result.output).plain.split())
+    assert result.exit_code != 0 and "--event" in plain
 
 
 def test_resetting_all_corrections_asks_first():
@@ -962,7 +965,7 @@ def test_checklist_file_puts_travel_warnings_under_their_own_pick(tmp_path):
         cli.app, ["--event", EVENT_ID, "checklist", "--offline", "--out", str(out)]
     )
     assert result.exit_code == 0, result.output
-    lines = out.read_text().splitlines()
+    lines = out.read_text(encoding="utf-8").splitlines()
     first = next(i for i, line in enumerate(lines) if "#1 AAA1" in line)
     second = next(i for i, line in enumerate(lines) if "#2 BBB1" in line)
     assert "First with a break" in lines[first]

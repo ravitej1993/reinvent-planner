@@ -74,6 +74,10 @@ async def open_launch(app, pilot, *, mode="api", seconds_before=100):
     pane.query_one("#arm", Button).press()
     await app.workers.wait_for_complete()
     await pilot.pause()
+    if mode == "api":
+        why = str(pane.query_one("#preflight").render())
+        notes = [str(n.message) for n in app._notifications]
+        assert pane.control.preflighted, f"arming failed: {why!r} {notes!r}"
     return pane, clock
 
 

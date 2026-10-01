@@ -96,6 +96,8 @@ async def answer(app, pilot, yes: bool):
     app.screen.query_one("#yes" if yes else "#no", Button).press()
     await app.workers.wait_for_complete()
     await pilot.pause()
+    # Shown only when a test fails: what the app told the user (e.g. an error after the write).
+    print("app messages:", [str(n.message) for n in app._notifications])
 
 
 def question(app) -> str:
