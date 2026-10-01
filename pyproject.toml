@@ -1,0 +1,83 @@
+[build-system]
+# Pinned so release builds are reproducible; Dependabot proposes updates.
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "reinvent-planner"
+version = "0.1.0"
+description = "Plan your AWS re:Invent schedule from the terminal with the official AWS Events API. Not affiliated with AWS."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "reinvent-planner contributors" }]
+keywords = ["aws", "reinvent", "conference", "schedule", "icalendar", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Scheduling",
+]
+dependencies = [
+    "httpx>=0.28,<1",
+    "pydantic>=2.9,<3",
+    "typer>=0.16",  # works with Click 8.2
+    "keyring>=25",
+    "icalendar>=6.1",  # Calendar.add_missing_timezones
+    "tzdata>=2024.1; sys_platform == 'win32'",
+    "rich>=14",
+    # The app overrides a few Textual and textual-serve internals (see tui/app.py, webui.py),
+    # so major versions are capped until they're checked.
+    "textual>=8,<9",
+    "textual-serve>=1.1,<2",
+    "aiohttp>=3.14,<4",  # web.RequestKey
+    "aiohttp-jinja2>=1.6",
+    "jinja2>=3.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/ravitej1993/reinvent-planner"
+Source = "https://github.com/ravitej1993/reinvent-planner"
+Issues = "https://github.com/ravitej1993/reinvent-planner/issues"
+Security = "https://github.com/ravitej1993/reinvent-planner/security/policy"
+
+[project.scripts]
+reinvent-planner = "reinvent_planner.cli:app"
+rip = "reinvent_planner.cli:app"
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/reinvent_planner"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["docs/demo.gif"]  # for the README on GitHub; not needed to build or run
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+# En dashes and arrows in user-facing text are intentional.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Live tests call the real API; run them explicitly with `pytest -m live`.
+addopts = "-q -m 'not live'"
+markers = ["live: calls the real AWS Events API (opt-in: pytest -m live)"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

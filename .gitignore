@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Never commit personal or registration-gated data
+*.sqlite3
+*.db
+tokens*.json
+*.token
+.env
+.env.*
+agenda*.json
+catalog*.json
+schedule*.json
+responses/
+
+# Tool output
+calendar/
+*.ics
+checklist*.md
+*.csv
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store

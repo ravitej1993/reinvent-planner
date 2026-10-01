@@ -1,0 +1,117 @@
+# Travel time between re:Invent 2026 venues, used to flag transfers you can't make in time.
+#
+#
+# How the figures were made (2026-09-29):
+#   * [walking]: street walks between venue entrances, measured with OpenStreetMap
+#     (routing.openstreetmap.de, foot profile).
+#   * [minutes], the figure warnings use: the walk + 10 minutes to get between the street and a
+#     room inside the resort, rounded up to 5, capped at 45 (take a shuttle beyond that).
+#   * [monorail]: an off-peak tip, not used for [minutes]. Walks to and from the four stations
+#     the re:Invent badge reportedly covered in 2025 (MGM Grand, Horseshoe/Paris, Flamingo/Caesars
+#     Palace, Harrah's/The LINQ; positions from OpenStreetMap) are measured; the 5 minutes to
+#     board (trains every 4-8 min) and the ride (1 min per stop plus running time, matching the
+#     official 15 min end to end) are modelled. At peak times (the :00/:30 rush, after keynotes)
+#     boarding takes longer, which is why [minutes] stays walking-based. minutes = walking + 5 +
+#     ride. Only routes within 10 minutes of walking are listed; for other pairs the stations are
+#     too far away to help.
+# Indoor routes (casino floors, bridges) aren't in the map data, so treat these as estimates.
+# Override any value by copying this file to <config dir>/venues/reinvent2026.toml.
+
+# Buffer between two sessions in the same venue.
+same_venue_minutes = 5
+
+# Connections between venues, from Splunk's re:Invent 2025 guide
+# (https://www.splunk.com/en_us/about-us/events/aws-reinvent.html). 2026 arrangements may differ:
+# check the attendee guide. The guide says shuttles ran "between most properties", except
+# Wynn–Venetian and Caesars Forum–Venetian. Only venues it names are listed as served; pairs
+# with another venue show as unknown.
+shuttle_venues = ["venetian", "wynn", "encore", "caesars_forum", "mgm"]
+no_shuttle = ["venetian|wynn", "venetian|encore", "venetian|caesars_forum"]
+# One resort complex, joined indoors: you walk, no shuttle needed.
+same_complex = ["wynn|encore"]
+
+# Assumed time between two venues this file doesn't recognize (warned about, never blocking).
+unknown_minutes = 30
+
+# Venue keys and the lowercase text that identifies them in a session's venue (or room).
+[aliases]
+venetian = ["venetian", "palazzo", "sands expo"]
+wynn = ["wynn"]
+encore = ["encore"]
+wynn_encore = ["wynn/encore"]
+caesars_forum = ["caesars forum"]
+caesars_palace = ["caesars palace"]
+mgm = ["mgm grand", "mgm"]
+
+# Display names for `rip venues`.
+[names]
+venetian = "Venetian"
+wynn = "Wynn"
+encore = "Encore"
+wynn_encore = "Wynn/Encore"
+caesars_forum = "Caesars Forum"
+caesars_palace = "Caesars Palace"
+mgm = "MGM Grand"
+
+# The catalog lists Wynn and Encore sessions together as "Wynn/Encore"; the room name says
+# which building. Wynn's convention level is the "Convention Promenade" with rooms named after
+# wines; Encore's rooms (Level 1) are the Encore Ballroom and rooms named after composers.
+# A "Wynn/Encore" room matching neither list keeps the combined key (no travel figures, so
+# transfers to or from it are only guessed).
+[room_aliases.wynn_encore]
+wynn = ["convention promenade", "latour", "lafite", "margaux", "la tache", "montrachet",
+        "mouton", "castillon", "fleurie", "meursault", "cristal", "bollinger"]
+encore = ["encore ballroom", "brahms", "chopin", "debussy", "mozart", "ravel", "beethoven"]
+
+# Notes shown with transfers between these venues (from the same 2025 guide).
+[notes]
+"venetian|wynn" = "pedestrian bridge between Wynn and the Venetian; no shuttle (2025)"
+"venetian|encore" = "via the Wynn–Venetian pedestrian bridge; no shuttle (2025)"
+"venetian|caesars_forum" = "temporary walkway during Expo hours; no shuttle (2025)"
+"wynn|encore" = "connected indoors"
+
+# Planning minutes between two venue keys (either direction): the walk + 10, as above.
+[minutes]
+"venetian|wynn" = 35
+"venetian|encore" = 35
+"venetian|caesars_forum" = 25
+"venetian|caesars_palace" = 45
+"venetian|mgm" = 45
+"wynn|encore" = 20
+"wynn|caesars_forum" = 35
+"wynn|caesars_palace" = 45
+"wynn|mgm" = 45
+"encore|caesars_forum" = 35
+"encore|caesars_palace" = 45
+"encore|mgm" = 45
+"caesars_forum|caesars_palace" = 35
+"caesars_forum|mgm" = 40
+"caesars_palace|mgm" = 45
+
+# Measured street walks: meters and minutes at walking pace, before the buffer.
+[walking]
+"venetian|wynn" = { meters = 1582, minutes = 21 }
+"venetian|encore" = { meters = 1727, minutes = 23 }
+"venetian|caesars_forum" = { meters = 894, minutes = 12 }
+"venetian|caesars_palace" = { meters = 2532, minutes = 34 }
+"venetian|mgm" = { meters = 2378, minutes = 32 }
+"wynn|encore" = { meters = 622, minutes = 8 }
+"wynn|caesars_forum" = { meters = 1731, minutes = 23 }
+"wynn|caesars_palace" = { meters = 2502, minutes = 33 }
+"wynn|mgm" = { meters = 3264, minutes = 44 }
+"encore|caesars_forum" = { meters = 1875, minutes = 25 }
+"encore|caesars_palace" = { meters = 2646, minutes = 35 }
+"encore|mgm" = { meters = 3409, minutes = 45 }
+"caesars_forum|caesars_palace" = { meters = 1614, minutes = 22 }
+"caesars_forum|mgm" = { meters = 2010, minutes = 27 }
+"caesars_palace|mgm" = { meters = 2922, minutes = 39 }
+
+# Off-peak monorail tip for "a|b": board at `from` (near a), leave at `to` (near b).
+[monorail]
+"venetian|caesars_palace" = { from = "Harrah's/The LINQ", to = "Flamingo/Caesars Palace", minutes = 42, walking = 35, ride = 2 }
+"venetian|mgm" = { from = "Harrah's/The LINQ", to = "MGM Grand", minutes = 35, walking = 24, ride = 6 }
+"wynn|mgm" = { from = "Harrah's/The LINQ", to = "MGM Grand", minutes = 44, walking = 33, ride = 6 }
+"encore|mgm" = { from = "Harrah's/The LINQ", to = "MGM Grand", minutes = 46, walking = 35, ride = 6 }
+"caesars_forum|caesars_palace" = { from = "Harrah's/The LINQ", to = "Flamingo/Caesars Palace", minutes = 31, walking = 24, ride = 2 }
+"caesars_forum|mgm" = { from = "Harrah's/The LINQ", to = "MGM Grand", minutes = 24, walking = 13, ride = 6 }
+"caesars_palace|mgm" = { from = "Flamingo/Caesars Palace", to = "MGM Grand", minutes = 39, walking = 29, ride = 5 }
