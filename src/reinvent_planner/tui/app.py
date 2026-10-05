@@ -760,7 +760,11 @@ class PlannerApp(App):
             )
 
         outcome = services.sign_in(announce, cancel)
-        self.call_from_thread(self._sign_in_done, outcome)
+        # Quitting mid-sign-in stops the wait (on_unmount); by then there may be no app left to
+        # report to, and handing over to a closed app can block this thread for good.
+        if self.is_running:
+            with contextlib.suppress(RuntimeError):
+                self.call_from_thread(self._sign_in_done, outcome)
 
     def _sign_in_done(self, outcome: services.Outcome) -> None:
         self._sign_in_cancel = None
