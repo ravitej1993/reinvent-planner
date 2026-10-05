@@ -457,6 +457,8 @@ async def test_a_second_sync_while_one_runs_is_refused(seeded, monkeypatch):
         app.action_refresh()
         release.set()
         await app.workers.wait_for_complete()
+        await pilot.pause()  # let the sync's callback finish before the app shuts down
+        await pilot.pause()
     assert calls == [1]
 
 

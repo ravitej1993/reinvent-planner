@@ -269,8 +269,9 @@ async def test_refresh_reads_the_real_schedule(signed_in):
     async with app.run_test(size=(140, 50)) as pilot:
         assert rows(app) == []
         app.query_one("#personal-refresh", Button).press()
-        await app.workers.wait_for_complete()
-        await pilot.pause()
+        for _ in range(3):  # the press, the read worker, then its callback (slow on CI)
+            await pilot.pause()
+            await app.workers.wait_for_complete()
         assert [r[3] for r in rows(app)] == ["Lunch"]
     assert signed_in.writes == []
     with Catalog() as cat:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from collections.abc import Callable
 
 import httpx
@@ -115,3 +116,16 @@ def signed_in_auth(token_handler=None, tokens: TokenSet | None = None) -> Auth:
         MemoryTokenStore(tokens or fresh_tokens()),
         http=mock_client(token_handler or default_handler),
     )
+
+
+def pytest_unconfigure(config):
+    """Name any non-daemon thread still running when the tests end: it would keep the
+    process (and a CI job) alive after every test has passed."""
+    import threading
+
+    lingering = [
+        t for t in threading.enumerate() if t is not threading.main_thread() and not t.daemon
+    ]
+    for thread in lingering:
+        target = getattr(thread, "_target", None)
+        print(f"\nLINGERING THREAD at exit: {thread.name!r} target={target!r}", file=sys.__stderr__)
