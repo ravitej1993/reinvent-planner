@@ -356,13 +356,41 @@ not measured.
 
 ## Using it from Claude Code
 
-Claude Code can drive `rip` for you ("find 300-level agent workshops on Tuesday that don't clash
-with my plan"). This repo includes a skill, [`.claude/skills/reinvent-planner`](.claude/skills/reinvent-planner/SKILL.md),
-that Claude Code picks up automatically when you work in a clone. It teaches it to keep output
-short (`--offline`, `--limit`), to read travel warnings correctly, to run `rip reserve --dry-run`
-first, and to **ask you before anything that changes your schedule**. Your Claude Code permission
-prompt is the final check, so approve a `--yes` only for a change you've confirmed. To use the
-skill everywhere, copy that folder to `~/.claude/skills/`.
+Claude Code can drive `rip` for you. This repo includes a skill,
+[`.claude/skills/reinvent-planner`](.claude/skills/reinvent-planner/SKILL.md), that Claude Code
+picks up automatically when you work in a clone. To use it in every project, copy that folder
+to `~/.claude/skills/`. Then ask things like:
+
+- "Find 300-level agent workshops on Tuesday that don't clash with my plan."
+- "Check my re:Invent plan for overlaps and walks I can't make."
+- "Rank AIM301 first with AIM302 as its backup." (it asks first)
+- "What would `rip reserve` try, in order?" (a dry run; nothing is reserved)
+
+What the skill teaches Claude:
+
+- **Keep output short:** `--offline` (the cached schedule, no API calls) and `search --limit`.
+- **Read warnings correctly:** an *overlap* is a real conflict; a *tight* walk is only a
+  warning, because travel never blocks a reservation.
+- **Reservations:** run `rip reserve --dry-run` before any real reservation, respect the
+  fair-use limits (one run at a time, the pause between runs, no retry loops), and check a
+  "may or may not be reserved" result with `rip schedule`.
+- **Ask you first, and never add `--yes` on its own,** for anything that:
+  - changes your schedule (favorites, personal time, `reserve`, `cancel`);
+  - changes your ranking (it's what `rip reserve` reserves);
+  - publishes or unpublishes the calendar feed (and says so when personal time or the
+    ranking would be included);
+  - changes travel-time corrections or measures a new table (which sends venue names to
+    OpenStreetMap);
+  - signs you out, or replaces the catalog with `sync --force`.
+- **Leave sign-in to you:** you run `rip login` / `rip setup` yourself, since they open a
+  browser.
+- **Treat the feed link as a secret:** it doesn't repeat `rip calendar url` output unless you
+  ask for it.
+- **Don't launch the app:** `rip tui` and `rip ui` are interactive, so it suggests them to you
+  instead.
+
+Your Claude Code permission prompt is the final check: approve a command with `--yes` only for
+a change you've confirmed.
 
 ## Also useful: the official MCP server
 
