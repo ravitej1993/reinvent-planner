@@ -500,14 +500,23 @@ async def test_no_sync_during_the_not_open_cooldown_either(server, monkeypatch):
         assert synced == []
 
 
-async def test_the_app_leaves_when_the_rip_ui_server_is_gone(server):
-    import asyncio
+async def test_the_app_leaves_when_the_rip_ui_server_is_gone(server, monkeypatch):
+    import threading
 
     app = PlannerApp(EVENT_ID)
     async with app.run_test(size=(160, 50)) as pilot:
         pane, _ = await open_launch(app, pilot, seconds_before=0)
         assert pane.control.start_run()
-        await asyncio.to_thread(app._watch_server, -1)  # "our parent is no longer the server"
+        # The watchdog as it runs in the app: a daemon thread (never asyncio's thread pool,
+        # whose workers Python waits for at exit). It hands over to the UI with
+        # call_from_thread; record the hand-over and run it here.
+        handed = []
+        monkeypatch.setattr(app, "call_from_thread", lambda fn, *a: handed.append(fn))
+        watcher = threading.Thread(target=app._watch_server, args=(-1,), daemon=True)
+        watcher.start()
+        watcher.join(5)
+        assert handed == [app.server_gone]  # "our parent is no longer the server"
+        app.server_gone()
         await pilot.pause()
         assert app.is_running and app.exit_when_idle  # a run in progress finishes first
         pane.control.finish_run(None)
