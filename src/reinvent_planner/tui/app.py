@@ -195,10 +195,12 @@ class SessionScreen(ModalScreen[bool]):
             answered,
         )
 
-    @work(thread=True, exclusive=True, group="write", exit_on_error=False)
     def _cancel_seat(self) -> None:
-        outcome = services.cancel_reservation(self.session_id)
-        self.app.call_from_thread(self._cancel_done, outcome)
+        def go() -> None:  # on the app, like _apply_favorite: this screen closes when done
+            outcome = services.cancel_reservation(self.session_id)
+            self.app.call_from_thread(self._cancel_done, outcome)
+
+        self.app.run_worker(go, thread=True, group="write", exit_on_error=False)
 
     def _cancel_done(self, outcome: services.Outcome) -> None:
         self.app.refresh_views()  # type: ignore[attr-defined]  (the schedule was re-read)
@@ -240,10 +242,14 @@ class SessionScreen(ModalScreen[bool]):
         details = Text.from_markup("\n".join(warnings)) if warnings else None
         self.app.push_screen(ConfirmScreen(question, details), answered)
 
-    @work(thread=True, exclusive=True, group="write", exit_on_error=False)
     def _apply_favorite(self, favorite: bool) -> None:
-        outcome = services.set_favorite(self.session_id, favorite)
-        self.app.call_from_thread(self._favorite_done, outcome, favorite)
+        # Run on the app, not this screen: the screen closes when it's done, and a worker
+        # belonging to it would be cancelled mid-finish.
+        def go() -> None:
+            outcome = services.set_favorite(self.session_id, favorite)
+            self.app.call_from_thread(self._favorite_done, outcome, favorite)
+
+        self.app.run_worker(go, thread=True, group="write", exit_on_error=False)
 
     def _favorite_done(self, outcome: services.Outcome, favorite: bool) -> None:
         if not outcome.ok:
@@ -251,7 +257,8 @@ class SessionScreen(ModalScreen[bool]):
             return
         self.changed = True
         self.app.notify("Added to favorites." if favorite else "Removed from favorites.")
-        self.dismiss(True)
+        if self.is_current:  # the user may have closed it while the change was being made
+            self.dismiss(True)
 
     @on(Button.Pressed, "#save-rank")
     def save_rank(self) -> None:
