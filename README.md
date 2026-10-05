@@ -354,6 +354,16 @@ your own file first. Found places are saved in the table and reused on reruns (`
 looks them up again). It handles up to 12 venues; sessions with no venue listed are reported,
 not measured.
 
+## Using it from Claude Code
+
+Claude Code can drive `rip` for you ("find 300-level agent workshops on Tuesday that don't clash
+with my plan"). This repo includes a skill, [`.claude/skills/reinvent-planner`](.claude/skills/reinvent-planner/SKILL.md),
+that Claude Code picks up automatically when you work in a clone. It teaches it to keep output
+short (`--offline`, `--limit`), to read travel warnings correctly, to run `rip reserve --dry-run`
+first, and to **ask you before anything that changes your schedule**. Your Claude Code permission
+prompt is the final check, so approve a `--yes` only for a change you've confirmed. To use the
+skill everywhere, copy that folder to `~/.claude/skills/`.
+
 ## Also useful: the official MCP server
 
 If you use an AI assistant, AWS's MCP server exposes the same API as tools. For Claude Code:
