@@ -126,6 +126,11 @@ def pytest_unconfigure(config):
     lingering = [
         t for t in threading.enumerate() if t is not threading.main_thread() and not t.daemon
     ]
+    import traceback
+
+    frames = sys._current_frames()
     for thread in lingering:
         target = getattr(thread, "_target", None)
         print(f"\nLINGERING THREAD at exit: {thread.name!r} target={target!r}", file=sys.__stderr__)
+        if thread.ident in frames:  # where it's stuck
+            print("".join(traceback.format_stack(frames[thread.ident])), file=sys.__stderr__)
