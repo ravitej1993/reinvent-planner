@@ -22,6 +22,7 @@ import httpx
 
 from . import __version__
 from .models import clean_text
+from .tls import ssl_context
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 ROUTER_URL = "https://routing.openstreetmap.de/routed-foot/route/v1/foot/{a};{b}"
@@ -66,6 +67,7 @@ class Measurer:
             timeout=30.0,
             follow_redirects=False,
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+            verify=ssl_context(),
         )
         self._sleep = sleep
         self._last = 0.0
