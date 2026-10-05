@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch: # a "Run workflow" button, e.g. to re-run CodeQL by hand
 
 # Least privilege by default; jobs ask for more only where needed.
 permissions:
