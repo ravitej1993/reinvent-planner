@@ -458,23 +458,30 @@ def test_go_waits_briefly_for_a_momentary_lock_holder(tmp_path, monkeypatch):
     import time
 
     monkeypatch.setenv("RIP_DATA_DIR", str(tmp_path))
-    held = threading.Event()
 
-    def brief_holder():
+    def hold(held: threading.Event, release: threading.Event, seconds: float) -> None:
         with launch.reservation_lock("ev1"):
             held.set()
-            time.sleep(0.2)
+            release.wait(seconds)
 
-    worker = threading.Thread(target=brief_holder)
-    worker.start()
-    held.wait(5)
-    with launch.reservation_lock("ev1", wait=2.0):  # got it once the holder let go
-        pass
-    worker.join()
-    holder = threading.Thread(target=brief_holder)
-    holder.start()
-    held.clear()
-    held.wait(5)
-    with pytest.raises(LaunchError, match="in progress"), launch.reservation_lock("ev1"):
-        pass  # no wait: refused at once
-    holder.join()
+    # A brief holder lets go within the wait: the lock is taken.
+    held, release = threading.Event(), threading.Event()
+    brief = threading.Thread(target=hold, args=(held, release, 0.2))
+    brief.start()
+    assert held.wait(5)
+    start = time.monotonic()
+    with launch.reservation_lock("ev1", wait=2.0):
+        assert time.monotonic() - start < 2.0
+    brief.join()
+
+    # A holder that keeps it: with no wait, refused at once.
+    held, release = threading.Event(), threading.Event()
+    keeper = threading.Thread(target=hold, args=(held, release, 10))
+    keeper.start()
+    assert held.wait(5)
+    try:
+        with pytest.raises(LaunchError, match="in progress"), launch.reservation_lock("ev1"):
+            pass
+    finally:
+        release.set()
+        keeper.join()
