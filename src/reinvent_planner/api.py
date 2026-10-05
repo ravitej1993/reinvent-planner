@@ -34,6 +34,7 @@ from .models import (
     SessionPage,
     clean_text,
 )
+from .tls import ssl_context
 
 API_HOST = "api.awsevents.com"
 BASE_URL = f"https://{API_HOST}"
@@ -169,6 +170,7 @@ class EventsClient:
             timeout=timeout,
             follow_redirects=False,
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+            verify=ssl_context(),  # the OS trust store: works behind TLS-inspecting proxies
         )
 
     def signed_in(self) -> bool:

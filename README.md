@@ -30,6 +30,12 @@ installing: `uvx reinvent-planner setup`.
 This installs two identical commands: `reinvent-planner` and the short `rip`. (If you use the
 `rip` file-deletion tool, stick with `reinvent-planner`.)
 
+**Behind a corporate proxy (Zscaler and similar)?** `rip` checks certificates against your
+operating system's trust store (the one Safari, Chrome and Edge use), so the proxy's root
+certificate that IT installed is trusted and nothing extra is needed. If you still get a
+certificate error (`CERTIFICATE_VERIFY_FAILED` or "certificate is not trusted"), point
+`SSL_CERT_FILE` at a PEM bundle that includes the proxy's root certificate.
+
 ## Quick start
 
 ```bash

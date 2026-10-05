@@ -32,6 +32,7 @@ from .catalog import Catalog, CatalogError, SearchFilters
 from .models import Schedule, Session
 from .planner import Item, TravelTimes, group_by_day
 from .reserve import Choice, Event, Report
+from .tls import TLSConfigError
 
 
 @dataclass
@@ -84,6 +85,7 @@ def run(fn: Callable[..., Any], *args: Any, width: int = 100, **kwargs: Any) -> 
             cli.InputError,
             calendar_feed.FeedError,
             launch.LaunchError,
+            TLSConfigError,
         ) as exc:
             value, error = None, str(exc)
         except httpx.HTTPError as exc:
@@ -111,7 +113,7 @@ def current_event() -> str:
 def signed_in_as() -> str | None:
     try:
         tokens = Auth(default_token_store()).current()
-    except AuthError:
+    except (AuthError, TLSConfigError):
         return None
     return (tokens.email or "your Builder ID") if tokens else None
 

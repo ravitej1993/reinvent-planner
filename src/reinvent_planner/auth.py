@@ -41,6 +41,7 @@ from urllib.parse import parse_qs, quote, urlencode, urlparse
 import httpx
 
 from .models import clean_text
+from .tls import ssl_context
 
 AUTHORIZE_URL = "https://oauth.awsevents.com/oauth2/authorize"
 TOKEN_URL = "https://oauth.awsevents.com/oauth2/token"  # noqa: S105 - an endpoint, not a secret
@@ -601,7 +602,9 @@ class Auth:
 
     def __init__(self, store: TokenStore, http: httpx.Client | None = None):
         self.store = store
-        self._http = http or httpx.Client(timeout=30.0, follow_redirects=False)
+        self._http = http or httpx.Client(
+            timeout=30.0, follow_redirects=False, verify=ssl_context()
+        )
         self._tokens: TokenSet | None = None
         self._lock = threading.Lock()
 

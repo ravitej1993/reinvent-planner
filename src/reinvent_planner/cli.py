@@ -82,6 +82,7 @@ from .planner import (
 from .planner import format_distance as _distance
 from .reserve import Choice, plan_round
 from .reserve import run as run_reservations
+from .tls import TLSConfigError
 
 # Tracebacks must never print local variables: they can hold tokens.
 app = typer.Typer(
@@ -161,6 +162,7 @@ def handle_errors(fn: F) -> F:
             calendar_feed.FeedError,
             launch.LaunchError,
             venues_measure.MeasureError,
+            TLSConfigError,
         ) as exc:
             err.print(f"[red]Error:[/] {escape(clean_text(str(exc)))}")
             raise typer.Exit(1) from None

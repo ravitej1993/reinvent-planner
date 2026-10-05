@@ -28,6 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "httpx>=0.28,<1",
+    "truststore>=0.10",  # the OS trust store (works behind Zscaler and similar proxies)
     "pydantic>=2.9,<3",
     "typer>=0.16",  # works with Click 8.2
     "keyring>=25",
